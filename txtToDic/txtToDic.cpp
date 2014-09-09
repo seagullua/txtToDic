@@ -19,12 +19,14 @@ QStringList createDictionaryFromFile(const QString& file_name, int& words)
 void addToDictionary(Dictionary& target, const Dictionary& source)
 {
     target.append(source);
-    target.removeDuplicates();
-    target.sort();
+    //target.removeDuplicates();
+    //target.sort();
 }
 
-void saveDictionaryToFile(const Dictionary& d, const QString& file_name)
+void saveDictionaryToFile(Dictionary& d, const QString& file_name)
 {
+    d.removeDuplicates();
+    d.sort();
     QString output = d.join("\n");
     QString number;
     if(d[0] != "")

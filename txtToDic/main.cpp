@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
     QDir dir(dirname);
     QStringList files = dir.entryList();
 
-    ADThreadPool pool(10);
+    ADThreadPool pool(8);
 
 
     QTime myTimer;
