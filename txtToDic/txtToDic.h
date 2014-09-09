@@ -4,7 +4,7 @@
 #include <QStringList>
 typedef QStringList Dictionary;
 
-Dictionary createDictionaryFromFile(const QString& file_name);
+Dictionary createDictionaryFromFile(const QString& file_name, int& words);
 void addToDictionary(Dictionary& target, const Dictionary& source);
 void saveDictionaryToFile(const Dictionary& d, const QString& file_name);
 
