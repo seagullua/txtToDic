@@ -7,9 +7,12 @@
 #include <QTime>
 #include <QDir>
 #include "txtToDic.h"
+#include "ADThreadPool.h"
+#include <thread>
 
 Dictionary dictionary;
 int total_words = 0;
+std::mutex lock;
 
 void processFile(QString fileName)
 {
@@ -17,8 +20,12 @@ void processFile(QString fileName)
     QStringList vec = createDictionaryFromFile(fileName, words);
 
 
-    total_words+=words;
-    addToDictionary(dictionary, vec);
+    {
+        std::unique_lock<std::mutex>
+                locker(lock);
+        total_words+=words;
+        addToDictionary(dictionary, vec);
+    }
 }
 
 
@@ -36,6 +43,9 @@ int main(int argc, char *argv[])
     QDir dir(dirname);
     QStringList files = dir.entryList();
 
+    ADThreadPool pool(10);
+
+
     QTime myTimer;
     myTimer.start();
 
@@ -45,9 +55,14 @@ int main(int argc, char *argv[])
         if(file != "." && file != "..")
         {
             files_processed++;
-            processFile(dir.filePath(file));
+            pool.addTask([=](){
+                processFile(dir.filePath(file));
+            });
         }
     }
+
+    pool.start();
+    pool.join();
 
     saveDictionaryToFile(dictionary, args[2]);
     int nMilliseconds = myTimer.elapsed();
