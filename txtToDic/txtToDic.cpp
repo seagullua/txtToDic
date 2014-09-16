@@ -2,14 +2,25 @@
 #include <QFile>
 #include <QTextStream>
 typedef QStringList Array;
-QStringList createDictionaryFromFile(const QString& file_name, int& words)
+QString readFile(const QString& file_name)
 {
     QFile file(file_name);
     file.open(QIODevice::ReadOnly);
     QString s = file.readAll();
 
-    s = s.toLower();
-    Array vec = s.split(QRegExp("\\W*\\s\\W*"));
+    return s;
+}
+
+QStringList processString(const QString& string)
+{
+    Array vec = string.toLower().split(QRegExp("\\W*\\s\\W*"));
+    return vec;
+}
+
+QStringList createDictionaryFromFile(const QString& file_name, int& words)
+{
+    QString s = readFile(file_name);
+    Array vec = processString(s);
     words = vec.size();
     vec.removeDuplicates();
     vec.sort();

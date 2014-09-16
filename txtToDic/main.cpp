@@ -9,12 +9,11 @@
 #include "txtToDic.h"
 #include "ADThreadPool.h"
 #include <thread>
-
-Dictionary dictionary;
-int total_words = 0;
+#include "indexer.h"
+typedef QVector<Index*> Indexes;
 std::mutex lock;
 
-void processFile(QString fileName)
+void processFile(QString fileName, const Indexes& indexes)
 {
     int words = 0;
     QStringList vec = createDictionaryFromFile(fileName, words);
@@ -23,8 +22,29 @@ void processFile(QString fileName)
     {
         std::unique_lock<std::mutex>
                 locker(lock);
-        total_words+=words;
-        addToDictionary(dictionary, vec);
+        foreach(Index* index, indexes)
+        {
+            index->addToIndex(fileName, vec);
+        }
+    }
+}
+
+void findInIndex(QString index_name, QString query, Index* index)
+{
+    QTextStream out(stdout);
+
+    out << "*" << index_name << endl;
+    QStringList list = index->find(query);
+    if(list.size() == 0)
+    {
+        out << "None" << endl;
+    }
+    else
+    {
+        for(QString res: list)
+        {
+            out << "- " << res << endl;
+        }
     }
 }
 
@@ -35,13 +55,25 @@ int main(int argc, char *argv[])
     QStringList args = a.arguments();
     if(args.size() < 3)
     {
-        qDebug() << "Wrong usage: dir_to_process output_file";
+        qDebug() << "Wrong usage: dir_to_process queries_file";
+        return 1;
     }
 
 
     QString dirname = args[1];
     QDir dir(dirname);
     QStringList files = dir.entryList();
+    for(int i=0; i<files.size(); ++i)
+    {
+        files[i] = dir.filePath(files[i]);
+    }
+
+    Indexes indexes;
+    MatrixIndex matrix(files);
+    InvertedIndex inverted;
+
+    indexes.push_back(&matrix);
+    indexes.push_back(&inverted);
 
     ADThreadPool pool(8);
 
@@ -56,7 +88,7 @@ int main(int argc, char *argv[])
         {
             files_processed++;
             pool.addTask([=](){
-                processFile(dir.filePath(file));
+                processFile(file, indexes);
             });
         }
     }
@@ -64,13 +96,25 @@ int main(int argc, char *argv[])
     pool.start();
     pool.join();
 
-    saveDictionaryToFile(dictionary, args[2]);
+    QStringList queries = readFile(args[2]).split("\n");
+
+    QTextStream out(stdout);
+
+    foreach(QString query, queries)
+    {
+        if(query.size())
+        {
+            out << "===================" << endl;
+            out << query << endl;
+            findInIndex("Matrix  ", query, &matrix);
+            findInIndex("Inverted", query, &inverted);
+        }
+    }
+
+    //saveDictionaryToFile(dictionary, args[2]);
     int nMilliseconds = myTimer.elapsed();
-    qDebug() << "Files: \t" << files_processed;
-    qDebug() << "Words unique: " << dictionary.size();
-    qDebug() << "Time: \t" << nMilliseconds;
-    qDebug() << "Words: \t" << total_words;
-    qDebug() << "Words per s:  " << (double(total_words) * 1000 / nMilliseconds);
+    out << "---------------------" << endl;
+    out << "Time: \t" << nMilliseconds << endl;
 
     return 0;
 }

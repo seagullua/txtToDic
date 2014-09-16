@@ -17,7 +17,9 @@ TEMPLATE = app
 
 SOURCES += main.cpp \
     txtToDic.cpp \
-    ADThreadPool.cpp
+    ADThreadPool.cpp \
+    indexer.cpp
 
 HEADERS += \
-    txtToDic.h
+    txtToDic.h \
+    indexer.h
