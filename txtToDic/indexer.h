@@ -3,6 +3,7 @@
 #include "txtToDic.h"
 #include <QMap>
 #include <vector>
+#include <set>
 #include <functional>
 
 typedef QMap<QString, int> WordMap;
@@ -21,7 +22,15 @@ public:
 
     virtual void addToIndex(const QString& file_name,
                             const Dictionary& dictionary)=0;
-    virtual QStringList find(QString query) const=0;
+    virtual QStringList find(QString) const
+    {
+        return QStringList();
+    }
+    virtual QStringList findPhrase(QString) const
+    {
+        return QStringList();
+    }
+
 protected:
 
     void findRun(QString query, const Callback& callback) const;
@@ -68,5 +77,43 @@ private:
     List findWord(QString word) const;
     InvertedIndexContainer _container;
 };
+
+class TwoWordInvertedIndex : public Index
+{
+public:
+    void addToIndex(const QString& file_name,
+                    const Dictionary& dictionary);
+    QStringList findPhrase(QString str) const;
+private:
+    void saveWord(int file_id, int word_id);
+
+    WordMap _files;
+    WordMap _words;
+
+    QStringList splitToPairs(const Dictionary& dictionary) const;
+    typedef QSet<int> List;
+    typedef QMap<int, List> InvertedIndexContainer;
+    InvertedIndexContainer _container;
+};
+
+class CordinateInvertedIndex : public Index
+{
+public:
+    void addToIndex(const QString& file_name,
+                    const Dictionary& dictionary);
+    QStringList findPhrase(QString str) const;
+private:
+    void saveWord(int file_id, int word_id, int coordinate);
+
+    WordMap _files;
+    WordMap _words;
+
+    QStringList splitToPairs(const Dictionary& dictionary) const;
+    typedef QSet<int> Coordinates;
+    typedef QMap<int, Coordinates> List;
+    typedef QMap<int, List> InvertedIndexContainer;
+    InvertedIndexContainer _container;
+};
+
 
 #endif // INDEXER_H

@@ -210,8 +210,9 @@ void InvertedIndex::saveWord(int file_id, int word_id)
 }
 
 void InvertedIndex::addToIndex(const QString& file_name,
-                const Dictionary& dictionary)
+                const Dictionary& dictionary_)
 {
+    Dictionary dictionary = makeUnique(dictionary_);
     int file_id = getOrAddWordID(_files, file_name);
     foreach(QString word, dictionary)
     {
@@ -277,3 +278,118 @@ QStringList InvertedIndex::find(QString query) const
     return files;
 }
 
+void TwoWordInvertedIndex::saveWord(int file_id, int word_id)
+{
+    List& list = _container[word_id];
+    list.insert(file_id);
+}
+QStringList TwoWordInvertedIndex::findPhrase(QString str) const
+{
+    QStringList pairs = splitToPairs(processString(str));
+    List list;
+    for(int i=0; i<pairs.size(); ++i)
+    {
+        int word_id = getWordID(_words, pairs[i]);
+        if(i == 0)
+        {
+            list.unite(_container[word_id]);
+        }
+        else
+        {
+            list.intersect(_container[word_id]);
+        }
+    }
+    QStringList files;
+    foreach(int file_id, list)
+    {
+        files.push_back(getWordByID(_files, file_id));
+    }
+    return files;
+
+}
+QStringList TwoWordInvertedIndex::splitToPairs(const Dictionary& dictionary) const
+{
+    QStringList no_space = removeSpaces(dictionary);
+    QStringList pairs;
+    for(int i=1; i<no_space.size(); ++i)
+    {
+        pairs.push_back(no_space[i-1]+" "+no_space[i]);
+    }
+    return pairs;
+}
+
+void TwoWordInvertedIndex::addToIndex(const QString& file_name,
+                const Dictionary& dictionary_)
+{
+    QStringList words = splitToPairs(dictionary_);
+    words.removeDuplicates();
+    int file_id = getOrAddWordID(_files, file_name);
+    foreach(QString word, words)
+    {
+        int word_id = getOrAddWordID(_words, word);
+        saveWord(file_id, word_id);
+    }
+}
+
+
+void CordinateInvertedIndex::saveWord(int file_id, int word_id, int coordinate)
+{
+    List& list = _container[word_id];
+    list[file_id].insert(coordinate);
+}
+void CordinateInvertedIndex::addToIndex(const QString& file_name,
+                const Dictionary& dictionary_)
+{
+    QStringList words = removeSpaces(dictionary_);
+    int file_id = getOrAddWordID(_files, file_name);
+    int i=0;
+    foreach(QString word, words)
+    {
+        int word_id = getOrAddWordID(_words, word);
+        saveWord(file_id, word_id, i);
+        i++;
+    }
+}
+
+QStringList CordinateInvertedIndex::findPhrase(QString str) const
+{
+    QStringList words = removeSpaces(processString(str));
+    QStringList files;
+    QMap<int, Coordinates> files_coordinates;
+    for(int i=0; i<words.size(); ++i)
+    {
+        int word_id = getWordID(_words, words[i]);
+        if(word_id < 0)
+        {
+            return QStringList();
+        }
+        List list = _container[word_id];
+        foreach(int file_id, list.keys())
+        {
+            Coordinates c = list[file_id];
+            Coordinates res;
+            foreach(int k, c)
+            {
+                res.insert(k-i);
+            }
+            if(i == 0)
+            {
+                files_coordinates[file_id].unite(res);
+            }
+            else
+            {
+                files_coordinates[file_id].intersect(res);
+            }
+        }
+    }
+
+    foreach(int file_id, files_coordinates.keys())
+    {
+        if(files_coordinates[file_id].size() > 0)
+        {
+            files.push_back(getWordByID(_files, file_id));
+        }
+    }
+
+    return files;
+}

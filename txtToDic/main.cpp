@@ -17,7 +17,7 @@ void processFile(QString fileName, const Indexes& indexes)
 {
     int words = 0;
     QStringList vec = createDictionaryFromFile(fileName, words);
-
+    //QStringList unique = makeUnique(vec);
 
     {
         std::unique_lock<std::mutex>
@@ -34,7 +34,7 @@ void findInIndex(QString index_name, QString query, Index* index)
     QTextStream out(stdout);
 
     out << "*" << index_name << endl;
-    QStringList list = index->find(query);
+    QStringList list = index->findPhrase(query);
     if(list.size() == 0)
     {
         out << "None" << endl;
@@ -72,8 +72,13 @@ int main(int argc, char *argv[])
     MatrixIndex matrix(files);
     InvertedIndex inverted;
 
-    indexes.push_back(&matrix);
-    indexes.push_back(&inverted);
+    TwoWordInvertedIndex two_inverted;
+    CordinateInvertedIndex cordinate_inverted;
+
+    //indexes.push_back(&matrix);
+    //indexes.push_back(&inverted);
+    indexes.push_back(&two_inverted);
+    indexes.push_back(&cordinate_inverted);
 
     ADThreadPool pool(8);
 
@@ -106,8 +111,8 @@ int main(int argc, char *argv[])
         {
             out << "===================" << endl;
             out << query << endl;
-            findInIndex("Matrix  ", query, &matrix);
-            findInIndex("Inverted", query, &inverted);
+            findInIndex("Inverted2  ", query, &two_inverted);
+            findInIndex("Cordinate ", query, &cordinate_inverted);
         }
     }
 

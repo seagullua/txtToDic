@@ -17,13 +17,20 @@ QStringList processString(const QString& string)
     return vec;
 }
 
+Array makeUnique(Array array)
+{
+    array.removeDuplicates();
+    array.sort();
+    return array;
+}
+
 QStringList createDictionaryFromFile(const QString& file_name, int& words)
 {
     QString s = readFile(file_name);
     Array vec = processString(s);
     words = vec.size();
-    vec.removeDuplicates();
-    vec.sort();
+    //vec.removeDuplicates();
+    //vec.sort();
     return vec;
 }
 
@@ -54,4 +61,15 @@ void saveDictionaryToFile(Dictionary& d, const QString& file_name)
     out << number << output;
 }
 
-
+QStringList removeSpaces(QStringList dictionary)
+{
+    QStringList no_space;
+    foreach(QString word, dictionary)
+    {
+        if(word.trimmed().size() !=0 )
+        {
+            no_space.push_back(word);
+        }
+    }
+    return no_space;
+}
