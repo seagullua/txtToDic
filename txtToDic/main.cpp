@@ -10,7 +10,9 @@
 #include "ADThreadPool.h"
 #include <thread>
 #include "indexer.h"
+#include "DictionaryIndex.h"
 typedef QVector<Index*> Indexes;
+typedef QVector<DictionaryIndex*> DictionaryIndexes;
 std::mutex lock;
 
 void processFile(QString fileName, const Indexes& indexes)
@@ -29,12 +31,51 @@ void processFile(QString fileName, const Indexes& indexes)
     }
 }
 
+void processFileDic(QString fileName, const DictionaryIndexes& indexes)
+{
+    int words = 0;
+    QStringList vec = createDictionaryFromFile(fileName, words);
+    QStringList unique = makeUnique(vec);
+
+    {
+        std::unique_lock<std::mutex>
+                locker(lock);
+        qDebug() << fileName;
+        foreach(DictionaryIndex* index, indexes)
+        {
+            foreach(QString word, unique)
+            {
+                index->addWord(word);
+            }
+        }
+    }
+}
+
 void findInIndex(QString index_name, QString query, Index* index)
 {
     QTextStream out(stdout);
 
     out << "*" << index_name << endl;
     QStringList list = index->findPhrase(query);
+    if(list.size() == 0)
+    {
+        out << "None" << endl;
+    }
+    else
+    {
+        for(QString res: list)
+        {
+            out << "- " << res << endl;
+        }
+    }
+}
+
+void findInIndexDic(QString index_name, QString query, DictionaryIndex* index)
+{
+    QTextStream out(stdout);
+
+    out << "*" << index_name << endl;
+    QStringList list = index->findWord(query.trimmed());
     if(list.size() == 0)
     {
         out << "None" << endl;
@@ -75,10 +116,21 @@ int main(int argc, char *argv[])
     TwoWordInvertedIndex two_inverted;
     CordinateInvertedIndex cordinate_inverted;
 
+
     //indexes.push_back(&matrix);
     //indexes.push_back(&inverted);
     indexes.push_back(&two_inverted);
     indexes.push_back(&cordinate_inverted);
+
+
+    DictionaryIndexes dic_index;
+    TreeIndex tree_index;
+    KGramsIndex kgrams(3);
+    PermutermIndex permut_index;
+
+    dic_index.push_back(&tree_index);
+    dic_index.push_back(&kgrams);
+    //dic_index.push_back(&permut_index);
 
     ADThreadPool pool(8);
 
@@ -93,7 +145,7 @@ int main(int argc, char *argv[])
         {
             files_processed++;
             pool.addTask([=](){
-                processFile(file, indexes);
+                processFileDic(file, dic_index);
             });
         }
     }
@@ -111,8 +163,9 @@ int main(int argc, char *argv[])
         {
             out << "===================" << endl;
             out << query << endl;
-            findInIndex("Inverted2  ", query, &two_inverted);
-            findInIndex("Cordinate ", query, &cordinate_inverted);
+            findInIndexDic("Tree  ", query, &tree_index);
+            findInIndexDic("KGrams  ", query, &kgrams);
+            findInIndexDic("Permut  ", query, &permut_index);
         }
     }
 

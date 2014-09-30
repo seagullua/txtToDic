@@ -18,8 +18,10 @@ TEMPLATE = app
 SOURCES += main.cpp \
     txtToDic.cpp \
     ADThreadPool.cpp \
-    indexer.cpp
+    indexer.cpp \
+    DictionaryIndex.cpp
 
 HEADERS += \
     txtToDic.h \
-    indexer.h
+    indexer.h \
+    DictionaryIndex.h
