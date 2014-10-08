@@ -30,11 +30,11 @@ public:
     {
         return QStringList();
     }
-
+    static int getOrAddWordID(WordMap& map, QString word);
 protected:
 
     void findRun(QString query, const Callback& callback) const;
-    static int getOrAddWordID(WordMap& map, QString word);
+
     static int getWordID(const WordMap& map, QString word);
     static QString getWordByID(const WordMap& map, int id);
 };

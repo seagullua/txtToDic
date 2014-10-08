@@ -11,6 +11,7 @@
 #include <thread>
 #include "indexer.h"
 #include "DictionaryIndex.h"
+#include "Merger.h"
 typedef QVector<Index*> Indexes;
 typedef QVector<DictionaryIndex*> DictionaryIndexes;
 std::mutex lock;
@@ -88,12 +89,49 @@ void findInIndexDic(QString index_name, QString query, DictionaryIndex* index)
         }
     }
 }
-
+#include "PairStorage.h"
 
 int main(int argc, char *argv[])
 {
     QCoreApplication a(argc, argv);
     QStringList args = a.arguments();
+
+    if(args.size() > 1)
+    {
+        QString command = args[1];
+        if(command == "LIST")
+        {
+            processDocuments(args[2], args[3], 2500000, 4);
+            return 0;
+        }
+        else if(command == "INVERT")
+        {
+            QStringList list;
+            QString dirname = args[2];
+            QDir dir(dirname);
+            QStringList files = dir.entryList();
+            for(int i=0; i<files.size(); ++i)
+            {
+                QString name = files[i];
+                if(name != "." && name != ".." && name != "dictionary.txt")
+                {
+                    list.append(dir.filePath(name));
+                }
+
+            }
+            //qDebug() << list << args[3];
+            Merger merger(list);
+
+            merger.saveToFile(args[3]);
+
+            return 0;
+        }
+        else if(command == "OPTIMISE")
+        {
+            optimise(args[2], args[3]);
+        }
+    }
+
     if(args.size() < 3)
     {
         qDebug() << "Wrong usage: dir_to_process queries_file";

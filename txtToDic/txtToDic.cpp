@@ -11,8 +11,10 @@ QString readFile(const QString& file_name)
     return s;
 }
 
-QStringList processString(const QString& string)
+QStringList processString(const QString& input)
 {
+    QString string = input;
+    string = string.replace(QRegExp("[0-9]+"), "");
     Array vec = string.toLower().split(QRegExp("\\W*\\s\\W*"));
     return vec;
 }

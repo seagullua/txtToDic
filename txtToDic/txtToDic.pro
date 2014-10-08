@@ -19,9 +19,13 @@ SOURCES += main.cpp \
     txtToDic.cpp \
     ADThreadPool.cpp \
     indexer.cpp \
-    DictionaryIndex.cpp
+    DictionaryIndex.cpp \
+    PairStorage.cpp \
+    Merger.cpp
 
 HEADERS += \
     txtToDic.h \
     indexer.h \
-    DictionaryIndex.h
+    DictionaryIndex.h \
+    PairStorage.h \
+    Merger.h
