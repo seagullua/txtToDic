@@ -21,11 +21,13 @@ SOURCES += main.cpp \
     indexer.cpp \
     DictionaryIndex.cpp \
     PairStorage.cpp \
-    Merger.cpp
+    Merger.cpp \
+    Optimiser.cpp
 
 HEADERS += \
     txtToDic.h \
     indexer.h \
     DictionaryIndex.h \
     PairStorage.h \
-    Merger.h
+    Merger.h \
+    Optimiser.h

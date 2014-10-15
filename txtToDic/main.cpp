@@ -6,6 +6,7 @@
 #include <QRegExp>
 #include <QTime>
 #include <QDir>
+#include "Optimiser.h"
 #include "txtToDic.h"
 #include "ADThreadPool.h"
 #include <thread>
@@ -129,6 +130,12 @@ int main(int argc, char *argv[])
         else if(command == "OPTIMISE")
         {
             optimise(args[2], args[3]);
+            return 0;
+        }
+        else if(command == "OPTIMISE_INDEX")
+        {
+            optimiseIndex(args[2], args[2]+".bin");
+            return 0;
         }
     }
 
